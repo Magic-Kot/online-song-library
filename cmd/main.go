@@ -37,7 +37,6 @@ func main() {
 	var cfg config.Config
 
 	err := cleanenv.ReadConfig("internal/config/.env", &cfg) // Local
-	//err := cleanenv.ReadEnv(&cfg) // Docker
 	if err != nil {
 		log.Fatal().Err(err).Msg("error initializing config")
 	}

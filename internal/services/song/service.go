@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 
 	"github.com/Magic-Kot/effective-mobile/internal/models"
@@ -14,7 +15,7 @@ import (
 
 type SongRepository interface {
 	AddSong(ctx context.Context, req models.CreateSong, res musicinfo.SongDetail) (int, error)
-	GetAllSong(ctx context.Context) ([]models.SongsResponse, error)
+	GetAllSong(ctx context.Context, req models.RequestGetAll) ([]models.SongsResponse, error)
 	GetAllSongFilter(ctx context.Context, req models.RequestGetAll) ([]models.SongsResponse, error)
 	GetLyricsSong(ctx context.Context, id string) (string, error)
 	UpdateSong(ctx context.Context, value string, arg []interface{}) error
@@ -53,7 +54,7 @@ func (s *SongService) GetAllSong(ctx context.Context, req models.RequestGetAll) 
 	logger := zerolog.Ctx(ctx)
 	logger.Debug().Msg("starting the 'GetAllSong' service")
 
-	if req.Filter != "" {
+	if req.Filter != "" && req.Value != "" {
 		res, err := s.SongRepository.GetAllSongFilter(ctx, req)
 		if err != nil {
 			return nil, err
@@ -62,7 +63,7 @@ func (s *SongService) GetAllSong(ctx context.Context, req models.RequestGetAll) 
 		return res, nil
 	}
 
-	res, err := s.SongRepository.GetAllSong(ctx)
+	res, err := s.SongRepository.GetAllSong(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -71,16 +72,23 @@ func (s *SongService) GetAllSong(ctx context.Context, req models.RequestGetAll) 
 }
 
 // GetLyricsSong - get the lyrics by id
-func (s *SongService) GetLyricsSong(ctx context.Context, userId string) (string, error) {
+func (s *SongService) GetLyricsSong(ctx context.Context, songId string, verse string) (string, error) {
 	logger := zerolog.Ctx(ctx)
-	logger.Debug().Msg("starting the 'GetUser' service")
+	logger.Debug().Msg("starting the 'GetLyricsSong' service")
 
-	user, err := s.SongRepository.GetLyricsSong(ctx, userId)
+	text, err := s.SongRepository.GetLyricsSong(ctx, songId)
 	if err != nil {
 		return "", err
 	}
 
-	return user, nil
+	textSplit := strings.Split(text, "\n\n")
+
+	verseInt, err := strconv.Atoi(verse)
+	if err != nil {
+		return "", err
+	}
+
+	return textSplit[verseInt], nil
 }
 
 // UpdateSong - update information about a saved song

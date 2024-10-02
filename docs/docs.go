@@ -32,6 +32,20 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
+                        "description": "Enter the entry id in the table",
+                        "name": "id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Enter the number of songs to output",
+                        "name": "limit",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
                         "description": "Enter the column name",
                         "name": "filter",
                         "in": "query"
@@ -132,7 +146,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "Enter the user ID",
+                        "description": "Enter the ID of the saved song",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -177,9 +191,16 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "User ID",
+                        "description": "Enter the ID of the saved song",
                         "name": "id",
                         "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Enter the verse number of the song",
+                        "name": "verse",
+                        "in": "query",
                         "required": true
                     }
                 ],
@@ -282,7 +303,16 @@ const docTemplate = `{
                 "id": {
                     "type": "integer"
                 },
+                "link": {
+                    "type": "string"
+                },
+                "release_date": {
+                    "type": "string"
+                },
                 "song": {
+                    "type": "string"
+                },
+                "text": {
                     "type": "string"
                 }
             }

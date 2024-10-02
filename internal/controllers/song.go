@@ -91,6 +91,8 @@ func (ac *ApiController) AddSong(c echo.Context) error {
 // @ID get-all-song
 // @Accept  json
 // @Produce  json
+// @Param id query string true "Enter the entry id in the table"
+// @Param limit query string true "Enter the number of songs to output"
 // @Param filter query string false "Enter the column name"
 // @Param value query string false "Enter the required column value"
 // @Success 200 {object} []models.SongsResponse
@@ -104,6 +106,9 @@ func (ac *ApiController) GetAllSong(c echo.Context) error {
 	ac.logger.Debug().Msg("starting the handler 'GetAllSong'")
 
 	var req models.RequestGetAll
+
+	req.Id = c.QueryParam("id")
+	req.Limit = c.QueryParam("limit")
 	req.Filter = c.QueryParam("filter")
 	req.Value = c.QueryParam("value")
 
@@ -125,7 +130,8 @@ func (ac *ApiController) GetAllSong(c echo.Context) error {
 // @ID get-lyrics-song
 // @Accept  json
 // @Produce  json
-// @Param id path int true "User ID"
+// @Param id path int true "Enter the ID of the saved song"
+// @Param verse query string true "Enter the verse number of the song"
 // @Success 200 {string} string
 // @Failure 400 {string} string
 // @Failure 500 {string} string
@@ -137,8 +143,9 @@ func (ac *ApiController) GetLyricsSong(c echo.Context) error {
 	ac.logger.Debug().Msg("starting the handler 'GetLyricsSong'")
 
 	id := c.Param("id")
+	verse := c.QueryParam("verse")
 
-	result, err := ac.songService.GetLyricsSong(ctx, id)
+	result, err := ac.songService.GetLyricsSong(ctx, id, verse)
 	if err != nil {
 		ac.logger.Debug().Msgf("error receiving song data: %v", err)
 		return c.JSON(http.StatusInternalServerError, err.Error())
@@ -173,14 +180,14 @@ func (ac *ApiController) UpdateSong(c echo.Context) error {
 
 	id := c.Param("id")
 
-	userIdInt, err := strconv.Atoi(id)
+	songIdInt, err := strconv.Atoi(id)
 	if err != nil {
-		ac.logger.Debug().Msgf("updateUser: invalid id: %d", id)
+		ac.logger.Debug().Msgf("updateSong: invalid id: %d", id)
 
 		return c.JSON(http.StatusBadRequest, fmt.Sprint("invalid id"))
 	}
 
-	req.Id = userIdInt
+	req.Id = songIdInt
 
 	err = ac.validator.Struct(&req)
 
@@ -228,7 +235,7 @@ func (ac *ApiController) UpdateSong(c echo.Context) error {
 // @ID delete-song
 // @Accept  json
 // @Produce  json
-// @Param id path int true "Enter the user ID"
+// @Param id path int true "Enter the ID of the saved song"
 // @Success 200 {string} string
 // @Failure 400,404 {string} string
 // @Router /song/delete/{id} [delete]
@@ -240,17 +247,17 @@ func (ac *ApiController) DeleteSong(c echo.Context) error {
 
 	id := c.Param("id")
 
-	userIdInt, err := strconv.Atoi(id)
+	songIdInt, err := strconv.Atoi(id)
 	if err != nil {
-		ac.logger.Debug().Msgf("updateUser: invalid id: %s", id)
+		ac.logger.Debug().Msgf("deleteSong: invalid id: %s", id)
 
 		return c.JSON(http.StatusBadRequest, fmt.Sprint("invalid id"))
 	}
 
-	err = ac.songService.DeleteSong(ctx, userIdInt)
+	err = ac.songService.DeleteSong(ctx, songIdInt)
 	if err != nil {
 		return c.JSON(http.StatusNotFound, err.Error())
 	}
 
-	return c.JSON(http.StatusOK, fmt.Sprintf("successfully deleted song: %d", userIdInt))
+	return c.JSON(http.StatusOK, fmt.Sprintf("successfully deleted song: %d", songIdInt))
 }

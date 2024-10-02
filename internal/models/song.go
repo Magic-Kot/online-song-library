@@ -6,6 +6,8 @@ type CreateSong struct {
 }
 
 type RequestGetAll struct {
+	Id     string `json:"id"`
+	Limit  string `json:"limit"`
 	Filter string `json:"filter"`
 	Value  string `json:"value"`
 }
