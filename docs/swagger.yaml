@@ -18,7 +18,13 @@ definitions:
         type: string
       id:
         type: integer
+      link:
+        type: string
+      release_date:
+        type: string
       song:
+        type: string
+      text:
         type: string
     type: object
 info:
@@ -35,6 +41,16 @@ paths:
       description: get all saved songs
       operationId: get-all-song
       parameters:
+      - description: Enter the entry id in the table
+        in: query
+        name: id
+        required: true
+        type: string
+      - description: Enter the number of songs to output
+        in: query
+        name: limit
+        required: true
+        type: string
       - description: Enter the column name
         in: query
         name: filter
@@ -102,7 +118,7 @@ paths:
       description: delete a song from the library
       operationId: delete-song
       parameters:
-      - description: Enter the user ID
+      - description: Enter the ID of the saved song
         in: path
         name: id
         required: true
@@ -132,11 +148,16 @@ paths:
       description: get the lyrics by id
       operationId: get-lyrics-song
       parameters:
-      - description: User ID
+      - description: Enter the ID of the saved song
         in: path
         name: id
         required: true
         type: integer
+      - description: Enter the verse number of the song
+        in: query
+        name: verse
+        required: true
+        type: string
       produces:
       - application/json
       responses:

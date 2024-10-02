@@ -14,12 +14,12 @@ import (
 )
 
 var (
-	errUserNotFound = errors.New("song not found")
+	errSongNotFound = errors.New("song not found")
 	errCreateSong   = errors.New("failed to create song")
 	errGetAllSong   = errors.New("error getting all songs")
-	errGetUser      = errors.New("failed to get song")
-	errUpdateUser   = errors.New("failed to update song")
-	errDeleteUser   = errors.New("failed to delete song")
+	errGetSong      = errors.New("failed to get song")
+	errUpdateSong   = errors.New("failed to update song")
+	errDeleteSong   = errors.New("failed to delete song")
 )
 
 type SongRepository struct {
@@ -56,13 +56,14 @@ func (s *SongRepository) AddSong(ctx context.Context, req models.CreateSong, res
 }
 
 // GetAllSong - get all the songs
-func (s *SongRepository) GetAllSong(ctx context.Context) ([]models.SongsResponse, error) {
+func (s *SongRepository) GetAllSong(ctx context.Context, req models.RequestGetAll) ([]models.SongsResponse, error) {
 	logger := zerolog.Ctx(ctx)
 	logger.Debug().Msg("accessing Postgres using the 'GetAllSong' method")
+	logger.Debug().Msgf("postgres: get songs by id: %s, limit: %s", req.Id, req.Limit)
 
 	var songs []models.SongsResponse
 
-	query := fmt.Sprint(`SELECT id, group_song, song FROM songs ORDER  BY group_song LIMIT 3 OFFSET 6`)
+	query := fmt.Sprintf(`SELECT * FROM songs WHERE id > %s ORDER BY id LIMIT %s`, req.Id, req.Limit)
 
 	err := s.client.Select(&songs, query)
 	if err != nil {
@@ -76,12 +77,12 @@ func (s *SongRepository) GetAllSong(ctx context.Context) ([]models.SongsResponse
 // GetAllSongFilter - get all the songs using the filter
 func (s *SongRepository) GetAllSongFilter(ctx context.Context, req models.RequestGetAll) ([]models.SongsResponse, error) {
 	logger := zerolog.Ctx(ctx)
-	logger.Debug().Msg("accessing Postgres using the 'GetAllSong' method")
-	logger.Debug().Msgf("postgres: get songs by filter: %s, value: %s", req.Filter, req.Value)
+	logger.Debug().Msg("accessing Postgres using the 'GetAllSongFilter' method")
+	logger.Debug().Msgf("postgres: get songs by id: %s, limit: %s, filter: %s, value: %s", req.Id, req.Limit, req.Filter, req.Value)
 
 	var songs []models.SongsResponse
 
-	query := fmt.Sprintf(`SELECT id, group_song, song FROM songs WHERE %s = $1`, req.Filter)
+	query := fmt.Sprintf(`SELECT * FROM songs WHERE %s = $1 AND id > %s ORDER BY id LIMIT %s`, req.Filter, req.Id, req.Limit)
 
 	err := s.client.Select(&songs, query, req.Value)
 	if err != nil {
@@ -105,9 +106,13 @@ func (s *SongRepository) GetLyricsSong(ctx context.Context, id string) (string, 
 	err := s.client.QueryRowx(query, id).Scan(&lyrics)
 
 	if errors.Is(err, sql.ErrNoRows) {
-		return "", errUserNotFound
+		fmt.Println(err)
+
+		return "", errSongNotFound
 	} else if err != nil {
-		return "", errGetUser
+		fmt.Println(err)
+
+		return "", errGetSong
 	}
 
 	return lyrics, nil
@@ -125,12 +130,12 @@ func (s *SongRepository) UpdateSong(ctx context.Context, value string, arg []int
 
 	if err != nil {
 		logger.Debug().Msgf("failed table updates: %s", err)
-		return errUpdateUser
+		return errUpdateSong
 	}
 
 	if str, _ := commandTag.RowsAffected(); str != 1 {
 		logger.Debug().Msgf("song not found: %s", err)
-		return errUserNotFound
+		return errSongNotFound
 	}
 
 	return nil
@@ -149,11 +154,11 @@ func (s *SongRepository) DeleteSong(ctx context.Context, id int) error {
 	commandTag, err := s.client.Exec(q, id)
 
 	if err != nil {
-		return errDeleteUser
+		return errDeleteSong
 	}
 
 	if str, _ := commandTag.RowsAffected(); str != 1 {
-		return errUserNotFound
+		return errSongNotFound
 	}
 
 	return nil
