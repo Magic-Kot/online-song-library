@@ -62,7 +62,7 @@ func (s *SongRepository) GetAllSong(ctx context.Context) ([]models.SongsResponse
 
 	var songs []models.SongsResponse
 
-	query := fmt.Sprint(`SELECT id, group_song, song FROM songs ORDER  BY group_song LIMIT 3 OFFSET 6`)
+	query := fmt.Sprint(`SELECT * FROM songs LIMIT 1 OFFSET 2`)
 
 	err := s.client.Select(&songs, query)
 	if err != nil {
