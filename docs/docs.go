@@ -227,7 +227,7 @@ const docTemplate = `{
             }
         },
         "/song/update/{id}": {
-            "patch": {
+            "put": {
                 "description": "update information about a saved song",
                 "consumes": [
                     "application/json"
@@ -254,7 +254,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.SongsResponse"
+                            "$ref": "#/definitions/models.UpdateRequest"
                         }
                     }
                 ],
@@ -300,6 +300,26 @@ const docTemplate = `{
                 "group_song": {
                     "type": "string"
                 },
+                "id": {
+                    "type": "integer"
+                },
+                "link": {
+                    "type": "string"
+                },
+                "release_date": {
+                    "type": "string"
+                },
+                "song": {
+                    "type": "string"
+                },
+                "text": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.UpdateRequest": {
+            "type": "object",
+            "properties": {
                 "id": {
                     "type": "integer"
                 },

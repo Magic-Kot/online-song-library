@@ -161,17 +161,17 @@ func (ac *ApiController) GetLyricsSong(c echo.Context) error {
 // @Accept  json
 // @Produce  json
 // @Param id path int true "Enter the song ID"
-// @Param input body models.SongsResponse true "You need to specify the name of the band and the song in the request body"
+// @Param input body models.UpdateRequest true "You need to specify the name of the band and the song in the request body"
 // @Success 200 {string} string
 // @Failure 400 {string} string
-// @Router /song/update/{id} [patch]
+// @Router /song/update/{id} [put]
 func (ac *ApiController) UpdateSong(c echo.Context) error {
 	ctx := c.Request().Context()
 	ctx = ac.logger.WithContext(ctx)
 
 	ac.logger.Debug().Msgf("starting the handler 'UpdateSong'")
 
-	var req models.SongsResponse
+	var req models.UpdateRequest
 	if err := c.Bind(&req); err != nil {
 		ac.logger.Warn().Msgf("bind: invalid request: %v", err)
 

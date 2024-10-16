@@ -14,6 +14,7 @@ import (
 )
 
 var (
+	errTransaction  = errors.New("transaction error")
 	errSongNotFound = errors.New("song not found")
 	errCreateSong   = errors.New("failed to create song")
 	errGetAllSong   = errors.New("error getting all songs")
@@ -37,22 +38,59 @@ func (s *SongRepository) AddSong(ctx context.Context, req models.CreateSong, res
 	logger := zerolog.Ctx(ctx)
 	logger.Debug().Msg("accessing Postgres using the 'AddSong' method")
 
-	q := `
-		INSERT INTO songs 
-		    (group_song, song, release_date, text, link) 
-		VALUES 
-		       ($1, $2, $3, $4, $5) 
-		RETURNING id
-	`
-
-	var id int
-
-	if err := s.client.QueryRowx(q, req.Group, req.Song, res.ReleaseData, res.Text, res.Link).Scan(&id); err != nil {
-		logger.Debug().Msgf("failed to create song. %s", err)
-		return 0, errCreateSong
+	tx, err := s.client.Begin()
+	if err != nil {
+		logger.Debug().Msgf("transaction creation error. err: %s", err)
+		return 0, errTransaction
 	}
 
-	return id, nil
+	checkGroupQuery := fmt.Sprint(`SELECT id FROM music_group WHERE group_name = $1`)
+
+	var idGroup, idSong int
+
+	rowGroup := s.client.QueryRowx(checkGroupQuery, req.Group).Scan(&idGroup)
+
+	if errors.Is(rowGroup, sql.ErrNoRows) {
+		logger.Debug().Msgf("music group not found. err: %s", err)
+
+		addGroupQuery := fmt.Sprint("INSERT INTO music_group (group_name) VALUES ($1) RETURNING id")
+
+		row := tx.QueryRow(addGroupQuery, req.Group)
+		if err = row.Scan(&idGroup); err != nil {
+			logger.Debug().Msgf("error writing to the 'music_group' table. err: %s", err)
+
+			tx.Rollback()
+			return 0, errTransaction
+		}
+
+		return 0, errSongNotFound
+	} else if rowGroup != nil {
+		logger.Debug().Msgf("error getting a music group. err: %s", err)
+
+		tx.Rollback()
+		return 0, errTransaction
+	}
+
+	addSongQuery := fmt.Sprint("INSERT INTO songs (song_name, release_date, text, link) VALUES ($1, $2, $3, $4) RETURNING id")
+
+	rowSong := tx.QueryRow(addSongQuery, req.Song, res.ReleaseData, res.Text, res.Link)
+	if err = rowSong.Scan(&idSong); err != nil {
+		logger.Debug().Msgf("error writing to the 'songs' table. err: %s", err)
+
+		tx.Rollback()
+		return 0, errTransaction
+	}
+
+	addMgsQuery := fmt.Sprint("INSERT INTO mgs (group_id, song_id) VALUES ($1, $2)")
+	_, err = tx.Exec(addMgsQuery, idGroup, idSong)
+	if err != nil {
+		logger.Debug().Msgf("error writing to the 'mgs' table. err: %s", err)
+
+		tx.Rollback()
+		return 0, errTransaction
+	}
+
+	return idSong, tx.Commit()
 }
 
 // GetAllSong - get all the songs
@@ -63,7 +101,7 @@ func (s *SongRepository) GetAllSong(ctx context.Context, req models.RequestGetAl
 
 	var songs []models.SongsResponse
 
-	query := fmt.Sprintf(`SELECT * FROM songs WHERE id > %s ORDER BY id LIMIT %s`, req.Id, req.Limit)
+	query := fmt.Sprintf(`SELECT id, song_name, release_date, text, link FROM songs WHERE id > %s ORDER BY id LIMIT %s`, req.Id, req.Limit)
 
 	err := s.client.Select(&songs, query)
 	if err != nil {
@@ -82,7 +120,7 @@ func (s *SongRepository) GetAllSongFilter(ctx context.Context, req models.Reques
 
 	var songs []models.SongsResponse
 
-	query := fmt.Sprintf(`SELECT * FROM songs WHERE %s = $1 AND id > %s ORDER BY id LIMIT %s`, req.Filter, req.Id, req.Limit)
+	query := fmt.Sprintf(`SELECT id, song_name, release_date, text, link FROM songs WHERE %s = $1 AND id > %s ORDER BY id LIMIT %s`, req.Filter, req.Id, req.Limit)
 
 	err := s.client.Select(&songs, query, req.Value)
 	if err != nil {

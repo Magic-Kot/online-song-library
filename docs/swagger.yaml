@@ -27,6 +27,19 @@ definitions:
       text:
         type: string
     type: object
+  models.UpdateRequest:
+    properties:
+      id:
+        type: integer
+      link:
+        type: string
+      release_date:
+        type: string
+      song:
+        type: string
+      text:
+        type: string
+    type: object
 info:
   contact: {}
   description: This project was developed as part of a test assignment from Effective
@@ -177,7 +190,7 @@ paths:
       tags:
       - songs
   /song/update/{id}:
-    patch:
+    put:
       consumes:
       - application/json
       description: update information about a saved song
@@ -194,7 +207,7 @@ paths:
         name: input
         required: true
         schema:
-          $ref: '#/definitions/models.SongsResponse'
+          $ref: '#/definitions/models.UpdateRequest'
       produces:
       - application/json
       responses:

@@ -16,7 +16,7 @@ func SetSongRoutes(e *echo.Echo, apiController *controllers.ApiController) {
 		song.POST("/create", apiController.AddSong)
 		song.GET("/all", apiController.GetAllSong)
 		song.GET("/get/:id", apiController.GetLyricsSong)
-		song.PATCH("/update/:id", apiController.UpdateSong)
+		song.PUT("/update/:id", apiController.UpdateSong)
 		song.DELETE("/delete/:id", apiController.DeleteSong)
 	}
 }
