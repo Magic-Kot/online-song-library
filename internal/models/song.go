@@ -12,6 +12,14 @@ type RequestGetAll struct {
 	Value  string `json:"value"`
 }
 
+type UpdateRequest struct {
+	Id          int    `json:"id" db:"id"`
+	Song        string `json:"song" db:"song_name"`
+	ReleaseDate string `json:"release_date" db:"release_date"`
+	Text        string `json:"text" db:"text"`
+	Link        string `json:"link" db:"link"`
+}
+
 type SongsResponse struct {
 	Id          int    `json:"id" db:"id"`
 	GroupSong   string `json:"group_song" db:"group_song"`

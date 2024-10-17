@@ -92,7 +92,7 @@ func (s *SongService) GetLyricsSong(ctx context.Context, songId string, verse st
 }
 
 // UpdateSong - update information about a saved song
-func (s *SongService) UpdateSong(ctx context.Context, song models.SongsResponse) error {
+func (s *SongService) UpdateSong(ctx context.Context, song models.UpdateRequest) error {
 	logger := zerolog.Ctx(ctx)
 	logger.Debug().Msg("starting the 'UpdateSong' service")
 
@@ -106,17 +106,17 @@ func (s *SongService) UpdateSong(ctx context.Context, song models.SongsResponse)
 	types := values.Type()
 
 	for i := 1; i < values.NumField(); i++ {
-		if values.Field(i).String() != "" {
-			if types.Field(i).Name == "GroupSong" {
-				value = append(value, fmt.Sprintf("group_song=$%d", argId))
-			} else {
-				value = append(value, fmt.Sprintf("%s=$%d", types.Field(i).Name, argId))
-			}
-
-			arg = append(arg, values.Field(i).String())
-
-			argId++
+		if types.Field(i).Name == "Song" {
+			value = append(value, fmt.Sprintf("song_name=$%d", argId))
+		} else if types.Field(i).Name == "ReleaseDate" {
+			value = append(value, fmt.Sprintf("release_date=$%d", argId))
+		} else {
+			value = append(value, fmt.Sprintf("%s=$%d", types.Field(i).Name, argId))
 		}
+
+		arg = append(arg, values.Field(i).String())
+
+		argId++
 	}
 
 	valueQuery := strings.Join(value, ", ")
